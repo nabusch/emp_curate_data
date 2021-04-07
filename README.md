@@ -25,7 +25,7 @@ This script loads each subjects' EEG data and the corresponding behavioral log f
   - miss: old item incorrectly judged as new (2)
   - false alarm: new item incorrectly judged as new (3)
   - correct rejection: new item correctly judged as new (4)
-  - rare cases when the response was not recorded (0)
+  - rare cases when the response was not recorded (9)
 - LOG.subscorrect = is the subject going to remember the image from this trial next time it is repeated?
   - subsequently remembered (1)
   - subsequently forgotten (2)
