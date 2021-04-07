@@ -19,7 +19,7 @@ This script loads each subjects' EEG data and the corresponding behavioral log f
 - LOG.scene_name: beach(1), forest(2), highway(3), building(4)
 - LOG.scene_cat: the same information, numerically coded
 - LOG.scene_man: is this scene category natural (1) or man-made (2)
-- LOG.is_old: is the image on this trial old (1) or new (0)
+- LOG.is_old: is the image on this trial old (1) or new (0), or in rare cases cannot be determined (9)/don't ask me why
 - LOG.recognition: was the subject's response on this trial a ...
   - hit: old item correctly judged as old (1)
   - miss: old item incorrectly judged as new (2)
@@ -30,3 +30,20 @@ This script loads each subjects' EEG data and the corresponding behavioral log f
   - subsequently remembered (1)
   - subsequently forgotten (2)
   - some images are shown a second time (9)
+
+The script performs the following checks:
+- Does the number of trials in EEG and Log file match?
+- Does scene category information match, indicating that trial order is correct?
+
+New trigger codes are generated as five-digit numbers coding (from left-most digit to right):
+- scene_cat: 1,2,3,4
+- scene_man: 1,2
+- is_old: 1, 0, 9
+- recognition: 1, 2, 3, 4, 9
+- subscorrect: 1, 2, 9
+
+The script produces the following output:
+- EEG in eeglab format including new trigger codes and a copy of the logfile table
+- EEG in EDF format
+- Logfile table in CSV format
+- Channel coordinates in CSV format
