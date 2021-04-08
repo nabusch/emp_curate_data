@@ -1,5 +1,5 @@
 # emp_curate_data
-Code for preparing the EEG data for #EEGManyPipelines.
+Code for preparing the EEG data for **#EEGManyPipelines**.
 
 
 In the EEGManyPipelines project, we will provide a set of (almost) unprocessed raw EEG data, and ask participants/analysts to process these data with an analysis pipeline of their choice. The dataset for this project is from an experiment on visual recognition memory. For the purpose of EEGManyPipelines, these data need to be prepared and curated.
@@ -12,6 +12,9 @@ This Matlab script loads the original raw data in Biosemi .bdf format, converts 
 4. downsample to 512 Hz;
 5. remove all triggers from events that are irrelevant for the EEGManyPipelines analysis, leaving only triggers indicating image onset;
 6. replace subject name with arbitrary, anonymous id.
+
+### ToDo:
+- [ ] 
 
 ## script02_recode_triggers
 This script loads each subjects' EEG data and the corresponding behavioral log file. From the log file, I construct a table coding for each trial:
@@ -47,3 +50,8 @@ The script produces the following output:
 - EEG in EDF format
 - Logfile table in CSV format
 - Channel coordinates in CSV format
+
+### ToDo:
+- [ ] EEG in EDF format
+- [ ] Logfile table in CSV format
+- [ ] Channel coordinates in CSV format
