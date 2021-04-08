@@ -9,7 +9,7 @@ close all
 clc
 
 %% Set configuration.
-cfg.dir_main = '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/Code/';
+cfg.dir_main = '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/code_repo/code/';
 cfg.dir_bdf = [cfg.dir_main, 'BDF/'];
 cfg.dir_eeg = [cfg.dir_main, 'EEG/'];
 cfg.dir_behavior = [cfg.dir_main, 'Behavior/'];
