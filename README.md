@@ -41,9 +41,14 @@ The script performs the following checks:
 New trigger codes are generated as five-digit numbers coding (from left-most digit to right):
 - scene_cat: 1,2,3,4; beach, building, highway, forest
 - scene_man: 1,2; manmade/building+highway (1), natural/bach+forest (2)
-- is_old: 1, 0, 9; old (1), new (9), missing (9)
+- is_old: 1, 0, 9; old (1), new (0), missing (9)
 - recognition: 1, 2, 3, 4, 9; hit (1), miss (2), false alarm (3), correct rejection (4)
 - subscorrect: 0, 1, 9; subsequently remembered (1), subsequently forgotten (0), not applicable (9)
+
+For example:
+42040
+
+This is a trial with a forest scene (scene_cat=4), which is a natural category (scene_man=2), that was shown for the first time (is_old=0) and was correctly rejected, i.e. not incorrectly judged as old (recognition=4). The next time this image was shown, it was not recognized as old (subsequent memory=0).
 
 The script produces the following output:
 - EEG in eeglab format including new trigger codes and a copy of the logfile table
