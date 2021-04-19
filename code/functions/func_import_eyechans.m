@@ -1,13 +1,15 @@
-function EEG = func_import_eyechans(EEG, cfg)
+function EEGout = func_import_eyechans(EEGin, cfg)
 
 % --------------------------------------------------------------
 % Compute VEOG and HEOG.
 % --------------------------------------------------------------
-EEG.data(cfg.VEOGchan,:,:) = mean(EEG.data(cfg.VEOGin{1},:,:)) - mean(EEG.data(cfg.VEOGin{2},:,:)); % VEOG
-EEG.data(cfg.HEOGchan,:,:) = mean(EEG.data(cfg.HEOGin{1},:,:)) - mean(EEG.data(cfg.HEOGin{2},:,:)); % HEOG
+EEGout = EEGin;
 
-EEG.chanlocs(cfg.VEOGchan).labels = 'VEOG';
-EEG.chanlocs(cfg.HEOGchan).labels = 'HEOG';
+EEGout.data(cfg.VEOGchan,:,:) = mean(EEGout.data(cfg.VEOGin{1},:),1) - mean(EEGout.data(cfg.VEOGin{2},:),1); % VEOG
+EEGout.data(cfg.HEOGchan,:,:) = mean(EEGout.data(cfg.HEOGin{1},:),1) - mean(EEGout.data(cfg.HEOGin{2},:),1); % HEOG
 
-EEG.nbchan = size(EEG.data,1);
-EEG = eeg_checkset(EEG, 'chanlocsize', 'chanlocs_homogeneous');
+EEGout.chanlocs(cfg.VEOGchan).labels = 'VEOG';
+EEGout.chanlocs(cfg.HEOGchan).labels = 'HEOG';
+
+EEGout.nbchan = size(EEGout.data,1);
+EEGout = eeg_checkset(EEGout, 'chanlocsize', 'chanlocs_homogeneous');

@@ -5,5 +5,5 @@ function EEG = func_import_reref(EEG, cfg)
 % software.
 % --------------------------------------------------------------
 if cfg.do_rereference
-    EEG = pop_reref( EEG, cfg.reref_chan);
+    EEG = pop_reref( EEG, cfg.reref_chan, 'keepref', 'on');
 end

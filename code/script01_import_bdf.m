@@ -9,7 +9,7 @@ close all
 clc
 
 %% Set configuration.
-cfg.dir_main = '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/code_repo/code/';
+cfg.dir_main = '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/';
 cfg.dir_bdf = [cfg.dir_main, 'BDF/'];
 cfg.dir_eeg = [cfg.dir_main, 'EEG/'];
 cfg.dir_behavior = [cfg.dir_main, 'Behavior/'];
@@ -18,30 +18,31 @@ cfg.do_resampling = 1;
 cfg.new_sampling_rate = 512;
 
 cfg.do_rereference = 1;
-cfg.reref_chan = 31; % 31=channel CZ.
+cfg.reref_chan = 48; % 48=channel CZ.
 
 cfg.EEGchans = 1:70;
 cfg.VEOGchan = 71;
 cfg.HEOGchan = 72;
 
 cfg.VEOGin = {[ 1 34],[67 68]};
-cfg.HEOGin = {[65],   [68]};
+cfg.HEOGin = {[65],   [66]};
 
 cfg.image_onset_triggers = [18, 21, 24, 27, 19, 22, 25, 28, 20, 23, 26, 29];
 
+cfg.overwrite_import = true;
 
 %% Load subject information
-subs_table = readtable(fullfile(cfg.dir_main, 'SubjectsTable.xlsx'));
+subs_table = readtable(fullfile([cfg.dir_main 'code_repo/code/'], 'SubjectsTable.xlsx'));
 subject_str_in = subs_table.Name(subs_table.Include==1);
 
 %%
-for isub = 1:length(subject_str_in)
+for isub = 1%:length(subject_str_in)
     
     in_bdf_name = ['CN_crt_', subject_str_in{isub} '.bdf'];
     out_eeg_name = ['EMP', sprintf('%02d', isub), '_import'];
     
     % Skip files that have already been imported.
-    if exist(fullfile(cfg.dir_eeg, [out_eeg_name '.set']))
+    if exist(fullfile(cfg.dir_eeg, [out_eeg_name '.set'])) & cfg.overwrite_import == false
         continue
     else
         
@@ -78,13 +79,6 @@ for isub = 1:length(subject_str_in)
         EEG = func_import_downsample(EEG, cfg);
         
         % --------------------------------------------------------------
-        % Remove all events/triggers that are not image onsets. Purpose:
-        % simplify the dataset and make it easier to match triggers to specific
-        % trials in the logfile without epoching the data.
-        % --------------------------------------------------------------
-        EEG = func_import_selectevents(EEG, cfg);
-        
-        % --------------------------------------------------------------
         % Save the new EEG file in EEGLAB format.
         % --------------------------------------------------------------
         EEG = pop_editset(EEG, 'setname', out_eeg_name);
@@ -92,3 +86,5 @@ for isub = 1:length(subject_str_in)
         
     end
 end
+
+disp('Done.')

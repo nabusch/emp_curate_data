@@ -1,6 +1,13 @@
+%%
+% Silently load EEGLAB once to load all necessary paths. Then wipe all the
+% unnessesary variables.
+addpath('/data3/Niko/EEG-Many-Pipelines/toolboxes/eeglab2021.0/');
+addpath('./functions')
+eeglab nogui
 clear
 close all
 clc
+
 
 %% Set configuration.
 cfg.dir_main = '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/';
@@ -8,72 +15,75 @@ cfg.dir_bdf = [cfg.dir_main, 'BDF/'];
 cfg.dir_eeg = [cfg.dir_main, 'EEG/'];
 cfg.dir_behavior = [cfg.dir_main, 'Behavior/'];
 cfg.dir_out = [cfg.dir_main, 'OUT/'];
+cfg.image_onset_triggers = [18, 21, 24, 27, 19, 22, 25, 28, 20, 23, 26, 29];
+cfg.eeg_export_format = 'GDF';
+cfg.overwrite_recode = true;
+
+subjects = dir([cfg.dir_eeg '*import.set']);
 
 
 %%
-subjects = dir([cfg.dir_eeg '*import.set']);
-
 for isub = 1:length(subjects)
-   
-    EEG = pop_loadset('filename', subjects(isub).name, 'filepath', subjects(isub).folder);
     
-    urname = EEG.urname(1:end-4);
-    logname = fullfile(cfg.dir_behavior, [urname, '_Logfile_processed.mat']);
-    load(logname);
+    out_eeg_name = ['EMP', sprintf('%02d', isub), '_recode'];
     
-    %%
-    ntrials_eeg = length(EEG.event);
-    ntrials_log = length(Info.T);
-    assert(ntrials_eeg == ntrials_log, 'Number of trials does not match!');
-    %%
-    LOG = table();
-    LOG.trial       = [1:ntrials_log]';
-    
-    LOG.scene_name  = {Info.T.category_name}';
-    LOG.scene_cat(strcmp(LOG.scene_name, 'beaches'))   = 1;
-    LOG.scene_cat(strcmp(LOG.scene_name, 'forests'))   = 2;
-    LOG.scene_cat(strcmp(LOG.scene_name, 'highways'))  = 3;
-    LOG.scene_cat(strcmp(LOG.scene_name, 'buildings')) = 4;
-    LOG.scene_man(LOG.scene_cat <= 2) = 1;
-    LOG.scene_man(LOG.scene_cat >  2) = 2;
-    
-    LOG.is_old      = ([Info.T.presentation_no]'-1) > 0;
-    
-    report_old  = [Info.T.ReportOld]';
-    report_old(isnan(report_old)) = 9;
-    
-    LOG.recog_cat(LOG.is_old &  report_old == 1) = 1;
-    LOG.recog_cat(LOG.is_old &  report_old == 0) = 2;
-    LOG.recog_cat(~LOG.is_old & report_old == 1) = 3;
-    LOG.recog_cat(~LOG.is_old & report_old == 0) = 4;
-    LOG.recog_cat(report_old == 9) = 9;
-    
-    LOG.recognition(LOG.recog_cat == 1) = {'hit'};
-    LOG.recognition(LOG.recog_cat == 2) = {'miss'};
-    LOG.recognition(LOG.recog_cat == 3) = {'falsealarm'};
-    LOG.recognition(LOG.recog_cat == 4) = {'correctreject'};
-    
-    subs_correct = [Info.T.subsequent_correct]';
-    subs_correct(isnan(subs_correct)) = 9;
-    LOG.subscorrect = subs_correct;
-    
-    triggers_new = ...
-        10000 * LOG.scene_cat + ...
-         1000 * LOG.scene_man + ...
-          100 * LOG.is_old + ...
-           10 * LOG.recog_cat + ...
-            1 * LOG.subscorrect;
+    % Skip files that have already been recoded.
+    if exist(fullfile(cfg.dir_eeg, [out_eeg_name '.set'])) & cfg.overwrite_recode == false
+        continue
+    else
         
-    %%
-    triggers_old = [EEG.event.type];
-    error_beach = sum(strcmp(LOG.scene_name, 'beaches')'   & ~ismember(triggers_old, [18, 19, 20]));
-    error_build = sum(strcmp(LOG.scene_name, 'buildings')' & ~ismember(triggers_old, [21, 22, 23]));
-    error_highw = sum(strcmp(LOG.scene_name, 'highways')'  & ~ismember(triggers_old, [24, 25, 26]));
-    error_forst = sum(strcmp(LOG.scene_name, 'forests')'   & ~ismember(triggers_old, [27, 28, 29]));
-    assert(sum([error_beach, error_build, error_highw, error_forst]) == 0, 'EEG triggers do not match LOG info!')
-
-    pop_writeeeg(EEG, '/data3/Niko/EEG-Many-Pipelines/curate_EEG_data/test', 'TYPE','EDF');
-
-    %%
+        %% -------------------------------------------------------------
+        % Load EEG data and behavioral logfile. Check that number of trials is
+        % identical in both files.
+        % --------------------------------------------------------------
+        [EEG, T] = func_recode_readdata(cfg, subjects, isub);
+                
         
+        %% -------------------------------------------------------------
+        % Remove all events/triggers that are not image onsets. Purpose:
+        % simplify the dataset and make it easier to match triggers to specific
+        % trials in the logfile without epoching the data.
+        % --------------------------------------------------------------
+        EEG = func_recode_selectevents(EEG, cfg);       
+
+        
+        %% -------------------------------------------------------------
+        % The number of trials/events in EEG and behavioral logfile do not
+        % always match. Either because EEG was started too early and
+        % includes the training trials, or it was started too late. We try
+        % to correct the discrepancy here and select thematching trials.
+        % --------------------------------------------------------------        
+        [EEG, T] = func_recode_match_triggers(EEG, T);
+
+
+        %% --------------------------------------------------------------
+        % Extract relevant behavioral information and write to CSV file.
+        % --------------------------------------------------------------
+        LOG = func_recode_makelogtable(T, cfg, isub);
+        
+        
+        %% --------------------------------------------------------------
+        % Generate new triggers based on logfile and check that information
+        % about trial order is consistent in EEG triggers and behavioral
+        % logfile.
+        % --------------------------------------------------------------
+        EEG = func_recode_eegtrigs(EEG, LOG);
+        EEG.logfile = LOG;
+        
+        
+        %% --------------------------------------------------------------
+        % Export EEG with new triggers to EDF format.
+        % --------------------------------------------------------------
+        %         func_recode_write_edf(EEG, cfg, isub)
+        
+        
+        % --------------------------------------------------------------
+        % Save the new EEG file in EEGLAB format.
+        % --------------------------------------------------------------
+        EEG = pop_editset(EEG, 'setname', out_eeg_name);
+        pop_saveset(EEG, 'filename', out_eeg_name, 'filepath', cfg.dir_eeg);        
+        
+    end    
 end
+
+disp('Done.')
