@@ -39,11 +39,11 @@ The script performs the following checks:
 - Does scene category information match, indicating that trial order is correct?
 
 New trigger codes are generated as five-digit numbers coding (from left-most digit to right):
-- scene_cat: 1,2,3,4
-- scene_man: 1,2
-- is_old: 1, 0, 9
-- recognition: 1, 2, 3, 4, 9
-- subscorrect: 1, 2, 9
+- scene_cat: 1,2,3,4; beach, building, highway, forest
+- scene_man: 1,2; manmade/building+highway (1), natural/bach+forest (2)
+- is_old: 1, 0, 9; old (1), new (9), missing (9)
+- recognition: 1, 2, 3, 4, 9; hit (1), miss (2), false alarm (3), correct rejection (4)
+- subscorrect: 0, 1, 9; subsequently remembered (1), subsequently forgotten (0), not applicable (9)
 
 The script produces the following output:
 - EEG in eeglab format including new trigger codes and a copy of the logfile table
